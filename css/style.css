@@ -22,9 +22,11 @@
   --t-krillion: #ff5f8f;
   --t-miss: #46606b;
 
-  --f-display: 'Unbounded', 'Arial Rounded MT Bold', 'Trebuchet MS', system-ui, sans-serif;
-  --f-body: 'Figtree', 'Segoe UI', system-ui, -apple-system, sans-serif;
-  --f-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  /* Tilt Warp: a warped, pressure-bent display face (its tilt axes animate on reveals).
+     Martian Mono: wide instrument-panel digits for depth gauges and timers. */
+  --f-display: 'Tilt Warp', 'Arial Rounded MT Bold', 'Trebuchet MS', system-ui, sans-serif;
+  --f-body: 'Instrument Sans', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --f-mono: 'Martian Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
 
   --r: 18px;
   --ease: cubic-bezier(.2, .8, .2, 1);
@@ -119,9 +121,10 @@ h1, h2, h3 { font-family: var(--f-display); margin: 0; text-wrap: balance; lette
 /* ---------- home ---------- */
 .hero { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 12px; padding-top: 6vh; }
 .hero h1 { font-size: clamp(2.3rem, 9vw, 3.6rem); font-weight: 900; line-height: .95; }
-.hero h1 span { color: var(--krill); }
+.hero h1 .accent { color: var(--krill); }
 .hero p { margin: 0; color: var(--ink-dim); max-width: 34ch; line-height: 1.5; }
 .dive-tag {
+  white-space: nowrap;
   font-family: var(--f-mono); font-size: .78rem; color: var(--ink-dim);
   border: 1px solid var(--edge); border-radius: 99px; padding: 6px 12px; background: var(--glass);
 }
@@ -375,7 +378,8 @@ h1, h2, h3 { font-family: var(--f-display); margin: 0; text-wrap: balance; lette
 @keyframes countPop { from { opacity: 0; transform: scale(1.8); } 40% { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(.7); } }
 
 @media (max-width: 520px) {
-  .kbd-hint { display: none; }
+  .kbd-hint, .hide-narrow { display: none; }
+  .hud-meta, .dive-tag { font-size: .66rem; }
 }
 @media (max-width: 420px) {
   .stat-grid { grid-template-columns: repeat(2, 1fr); }
@@ -387,3 +391,33 @@ h1, h2, h3 { font-family: var(--f-display); margin: 0; text-wrap: balance; lette
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
+
+/* ---------- display face: single weight, tilt axes ---------- */
+.brand, h1, h2, h3, .hero h1, .btn, .prompt-card .q, .reveal .tier-badge, .result-hero .depth,
+.stat b, .rank-line .big, .countin, .modal h2 {
+  font-weight: 400; font-synthesis: none;
+  font-variation-settings: 'XROT' 0, 'YROT' var(--yrot, 0);
+}
+.btn { letter-spacing: .06em; }
+.timer .num, .depth-read, .oxy-meta b, .round-row .rp, .tierrow .pt, .tierrow .dp { font-family: var(--f-mono); }
+.prompt-card .q { font-size: clamp(1.5rem, 6vw, 2.25rem); line-height: 1.12; }
+
+/* ---------- GSAP-driven motion (CSS keyframes stand down when it is active) ---------- */
+.sc, .sw { display: inline-block; will-change: transform; font-variation-settings: 'XROT' 0, 'YROT' var(--yrot, 0); }
+.prompt-card .q { perspective: 600px; }
+.gsap .prompt-card.enter .q, .gsap .prompt-card.enter .cat,
+.gsap .reveal, .gsap .reveal .tier-badge, .gsap .reveal .your-ans, .gsap .reveal .pts,
+.gsap .reveal .blurb, .gsap .reveal .rarest, .gsap .reveal .continue,
+.gsap .miss-chip, .gsap .screen, .gsap .guess-input.shake { animation: none; }
+.gsap .reveal.krillion .tier-badge { animation: glow 1.4s ease-in-out .7s infinite alternate; }
+.ghost-word {
+  position: fixed; z-index: 55; pointer-events: none; white-space: pre;
+  transform-origin: 50% 50%; translate: 0 -50%;
+  text-shadow: 0 0 18px currentColor;
+}
+.shock {
+  position: fixed; z-index: 4; pointer-events: none;
+  width: 60px; height: 60px; margin: -30px 0 0 -30px; border-radius: 50%;
+  border: 3px solid; box-shadow: 0 0 30px currentColor, inset 0 0 20px rgba(255,255,255,.15);
+}
+#view .screen { will-change: transform; }

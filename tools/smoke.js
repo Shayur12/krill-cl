@@ -12,6 +12,8 @@ const url = 'file://' + path.join(process.env.SITE_DIR || path.join(__dirname, '
   const errors = [];
   for (const vp of [{ width: 1280, height: 860 }, { width: 390, height: 780 }]) {
     const page = await browser.newPage({ viewport: vp });
+    // CDN scripts can be served from a local copy when the test machine is offline.
+    if (process.env.GSAP_LOCAL) await page.route('**/gsap.min.js', (r) => r.fulfill({ path: process.env.GSAP_LOCAL, contentType: 'text/javascript' }));
     page.on('pageerror', (e) => errors.push(`[${vp.width}] ${e.message}`));
     page.on('console', (m) => { if (m.type() === 'error' && !/fonts\.g/.test(m.text())) errors.push(`[${vp.width}] console: ${m.text()}`); });
     await page.goto(url);
@@ -51,6 +53,7 @@ const url = 'file://' + path.join(process.env.SITE_DIR || path.join(__dirname, '
         await page.press('#guess', 'Enter');
       }
       await page.waitForSelector('.reveal');
+      if (i === 0) { await page.waitForTimeout(260); await snap('plunge-mid'); }
       if (i === 2) { await page.waitForTimeout(800); await snap('reveal-krillion'); }
       const title = await page.textContent('.reveal .tier-badge');
       console.log(`[${tag}] round ${i + 1}: ${title}`);

@@ -5,6 +5,7 @@
   const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   let W = 0, H = 0, dpr = 1;
   let depth = 0, depthTarget = 0; // metres, 0..7000+
+  let plunge = 0; // 0..2, how fast we're sinking right now (particles streak upward)
   const snow = [], bubbles = [], bursts = [];
 
   // Ocean zones, surface to trench. Colours are [top, bottom] of the gradient.
@@ -58,6 +59,8 @@
     const dt = Math.min(50, now - last) / 16.67;
     last = now;
     depth += (depthTarget - depth) * Math.min(1, 0.04 * dt);
+    plunge *= Math.pow(0.955, dt);
+    if (plunge < 0.01) plunge = 0;
 
     const top = colourAt(depth, 'top'), bot = colourAt(depth, 'bot');
     const g = ctx.createLinearGradient(0, 0, 0, H);
@@ -86,18 +89,26 @@
 
     if (!reduce) {
       ctx.fillStyle = '#d8f4ff';
+      ctx.strokeStyle = '#d8f4ff';
+      const rush = plunge * 16;
       for (const s of snow) {
-        s.y += s.vy * dt; s.sway += 0.01 * dt;
+        s.y += (s.vy - rush * (0.5 + s.r / 2)) * dt; s.sway += 0.01 * dt;
         const x = s.x + Math.sin(s.sway) * 6;
         if (s.y > H + 5) Object.assign(s, makeSnow(false));
+        if (s.y < -30) { s.y = H + Math.random() * 30; s.x = Math.random() * W; }
         ctx.globalAlpha = s.a * (0.6 + Math.min(0.4, depth / 3000));
-        ctx.beginPath(); ctx.arc(x, s.y, s.r, 0, 6.283); ctx.fill();
+        if (rush > 1.5) {
+          ctx.lineWidth = s.r * 1.4;
+          ctx.beginPath(); ctx.moveTo(x, s.y); ctx.lineTo(x, s.y + rush * (1 + s.r) * 1.6); ctx.stroke();
+        } else {
+          ctx.beginPath(); ctx.arc(x, s.y, s.r, 0, 6.283); ctx.fill();
+        }
       }
       if (Math.random() < 0.04 * dt) bubbles.push(makeBubble());
       ctx.strokeStyle = '#bdf3ff';
       for (let i = bubbles.length - 1; i >= 0; i--) {
         const b = bubbles[i];
-        b.y += b.vy * dt * (1 + (b.r / 6)); b.wob += 0.05 * dt;
+        b.y += (b.vy * (1 + b.r / 6) - rush * 0.7) * dt; b.wob += 0.05 * dt;
         if (b.burst) b.life -= 0.012 * dt;
         if (b.y < -10 || b.life <= 0) { bubbles.splice(i, 1); continue; }
         ctx.globalAlpha = 0.45 * b.life;
@@ -118,6 +129,7 @@
   }
 
   window.Ocean = {
+    plunge(strength) { if (!reduce) plunge = Math.min(2.2, plunge + strength); },
     setDepth(m, instant) { depthTarget = Math.max(0, m); if (instant) depth = depthTarget; },
     burst(x, y, colour, n) {
       if (reduce) return;

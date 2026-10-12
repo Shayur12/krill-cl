@@ -10,7 +10,7 @@ let html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 
 html = html.replace(/<link rel="stylesheet" href="(css\/[^"]+)">/g, (_, href) =>
   `<style>\n${fs.readFileSync(path.join(root, href), 'utf8')}\n</style>`);
-html = html.replace(/<script src="([^"]+)"><\/script>/g, (_, src) =>
+html = html.replace(/<script src="(?!https?:)([^"]+)"><\/script>/g, (_, src) =>
   `<script>\n${fs.readFileSync(path.join(root, src), 'utf8').replace(/<\/script/gi, '<\\/script')}\n</script>`);
 
 if (fragment) {

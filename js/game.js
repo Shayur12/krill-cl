@@ -269,8 +269,8 @@
     view.innerHTML = `
       <section class="screen">
         <div class="hero">
-          <span class="dive-tag">DIVE #${n} · ${dateLabel(n)} · ${PROMPTS.length} prompts in the sea</span>
-          <h1>Go <span>deeper</span><br>than everyone else.</h1>
+          <span class="dive-tag">DIVE #${n} · ${dateLabel(n)} · ${PROMPTS.length} prompts</span>
+          <h1 id="hero-title"><span data-split>Go </span><span data-split class="accent">deeper</span><br><span data-split>than everyone else.</span></h1>
           <p>Seven prompts. Twenty-five seconds each. Obvious answers keep you in the shallows; rare ones send you to the trench.</p>
         </div>
         <div class="home-actions">
@@ -287,7 +287,7 @@
           <div class="eyebrow" style="margin-bottom:10px">Rarity ladder</div>
           <div class="tierlist">
             ${TIERS.slice().reverse().map((t) => `
-              <div class="tierrow"><span class="dot" style="background:${tierVar(t)}"></span><span class="nm">${t.name}</span><span class="pt">${t.pts} pts</span><span class="dp">${t.pts * M_PER_PT} m</span></div>`).join('')}
+              <div class="tierrow"><span class="dot" style="background:${tierVar(t)}"></span><span class="nm">${t.name}</span><span class="pt">${t.pts} pts</span><span class="dp">${fmt(t.pts * M_PER_PT)} m</span></div>`).join('')}
           </div>
         </div>
         <div class="result-stats">
@@ -302,6 +302,8 @@
     on('go-results', () => results(n));
     on('go-inf', startInfinite);
     on('go-arch', archive);
+    Motion.title($('#hero-title'));
+    Motion.stagger(document.querySelectorAll('.home-actions .btn, .tierrow, .result-stats .stat'), { each: 0.04, delay: 0.25 });
     if ($('#cd')) clockTimer = setInterval(() => { const el = $('#cd'); if (!el) return clearInterval(clockTimer); if (msToNextDive() <= 0) return home(); el.textContent = hms(msToNextDive()); }, 1000);
     if (!store.get('seenHelp', false)) { store.set('seenHelp', true); help(); }
   }
@@ -356,7 +358,7 @@
           <div class="hud">
             <div>
               <div class="pips" id="pips">${game.ids.map(() => '<div class="pip"></div>').join('')}</div>
-              <div class="hud-meta"><span>${game.mode === 'archive' ? 'PAST ' : ''}DIVE #${game.dive} · PROMPT <span id="rnum">1</span>/${ROUNDS}</span><span class="depth-read" id="depth">0 m</span></div>
+              <div class="hud-meta"><span><span class="hide-narrow">${game.mode === 'archive' ? 'PAST ' : ''}DIVE #${game.dive} · </span>PROMPT <span id="rnum">1</span>/${ROUNDS}</span><span class="depth-read" id="depth">0 m</span></div>
             </div>
             <div class="timer" id="timer">
               <svg viewBox="0 0 64 64"><circle class="track" cx="32" cy="32" r="28" fill="none" stroke-width="5"/><circle class="bar" id="tbar" cx="32" cy="32" r="28" fill="none" stroke-width="5" stroke-dasharray="175.93" stroke-dashoffset="0"/></svg>
@@ -430,6 +432,7 @@
     setDepthReadout();
     paintPips();
     focusInput();
+    Motion.promptIn(card, $('#pq'), $('#pcat'));
 
     if (inf) {
       game.lastFrame = performance.now();
@@ -486,6 +489,7 @@
     const c = document.createElement('span');
     c.className = 'miss-chip'; c.textContent = text;
     $('#misses').appendChild(c);
+    return c;
   }
 
   function onSubmit() {
@@ -511,10 +515,10 @@
   function wrong(raw) {
     const g = $('#guess');
     sound.bad();
-    shake(g);
+    if (Motion.enabled) Motion.reject(g, raw); else shake(g);
     if (navigator.vibrate) { try { navigator.vibrate(40); } catch (e) { /* ignore */ } }
     game.cur.misses.push(raw);
-    addMissChip(raw);
+    Motion.chip(addMissChip(raw));
     $('#fb').textContent = 'Not on the sheet';
     g.value = '';
     if (game.mode === 'infinite') {
@@ -533,6 +537,7 @@
   function correct(rank, raw) {
     const e = game.cur.sh.entries[rank];
     const tier = TIERS[e.tier];
+    const fromM = game.score * M_PER_PT;
     game.score += tier.pts;
     const rec = { id: game.cur.id, guess: raw, rank, tier: e.tier, pts: tier.pts };
     sound.good(e.tier);
@@ -543,7 +548,12 @@
       floater(`+${tier.o2}s O₂`, $('#oxy'), tierVar(tier));
     }
     recordRound(rec);
-    reveal(rec);
+    const panel = reveal(rec);
+    const colour = cssColour(tier);
+    Motion.accept($('#guess'), panel.querySelector('.your-ans'), raw, colour);
+    Motion.plunge($('#view .screen'), e.tier, $('#depth'), fromM, game.score * M_PER_PT);
+    if (game.mode !== 'infinite') Motion.pip(document.querySelectorAll('#pips .pip')[game.round]);
+    if (e.tier >= 4) Motion.shockwave($('#card'), colour);
   }
 
   function timeout() {
@@ -552,6 +562,7 @@
     const rec = { id: game.cur.id, guess: null, rank: -1, tier: -1, pts: 0 };
     recordRound(rec);
     reveal(rec, game.mode === 'infinite' ? 'Out of oxygen' : 'Out of air');
+    Motion.miss($('#card'));
   }
 
   let lastEsc = 0;
@@ -563,6 +574,7 @@
     const rec = { id: game.cur.id, guess: null, rank: -1, tier: -1, pts: 0 };
     recordRound(rec);
     reveal(rec, 'You surfaced');
+    Motion.miss($('#card'));
   }
 
   function recordRound(rec) {
@@ -598,7 +610,7 @@
     div.innerHTML = e
       ? `<div class="tier-badge">${tier.name}</div>
          <div class="your-ans">${esc(e.display)}</div>
-         <div class="pts">+${tier.pts} pts · +${fmt(tier.pts * M_PER_PT)} m</div>
+         <div class="pts">+<span data-count="${tier.pts}">${tier.pts}</span> pts · +${fmt(tier.pts * M_PER_PT)} m</div>
          <div class="blurb">${tier.blurb} About ${shareLabel(e.share)} of divers say this.</div>
          ${rec.tier !== 5 ? `<div class="rarest">One in a Krillion: <b>${esc(rarest.display)}</b></div>` : ''}`
       : `<div class="tier-badge">${missTitle}</div>
@@ -609,8 +621,10 @@
     $('#card').classList.remove('enter');
     $('#card').classList.add('revealed');
     g.value = '';
+    Motion.reveal(div, rec.tier);
     clearTimeout(game.advTimer);
     game.advTimer = setTimeout(advance, hold);
+    return div;
   }
 
   function advance() {
@@ -799,6 +813,8 @@
         </div>
       </section>`;
     countUp($('#depth-big'), m, 1400, '<small>m</small>');
+    Motion.stagger(document.querySelectorAll('#view .screen > *'), { each: 0.08, y: 40 });
+    Motion.stagger(document.querySelectorAll('.round-row'), { each: 0.07, delay: 0.45, y: 20 });
     requestAnimationFrame(() => drawHist($('#hist'), scores, d.score));
     wireRoundRows(d.rounds);
     $('#copy').addEventListener('click', () => copy(text));
@@ -837,6 +853,7 @@
         </div>
       </section>`;
     countUp($('#depth-big'), m, 1200, '<small>m</small>');
+    Motion.stagger(document.querySelectorAll('#view .screen > *'), { each: 0.08, y: 40 });
     wireRoundRows(g.rounds);
     $('#again').addEventListener('click', startInfinite);
     $('#homeb').addEventListener('click', home);
@@ -872,7 +889,7 @@
         <li>Spelling is forgiving: case, accents, “the”, plurals and small typos are fine.</li>
       </ol>
       <div class="tierlist">
-        ${TIERS.slice().reverse().map((t) => `<div class="tierrow"><span class="dot" style="background:${tierVar(t)}"></span><span class="nm">${t.name}</span><span class="pt">${t.pts} pts</span><span class="dp">${t.pts * M_PER_PT} m</span></div>`).join('')}
+        ${TIERS.slice().reverse().map((t) => `<div class="tierrow"><span class="dot" style="background:${tierVar(t)}"></span><span class="nm">${t.name}</span><span class="pt">${t.pts} pts</span><span class="dp">${fmt(t.pts * M_PER_PT)} m</span></div>`).join('')}
       </div>
       <p><b>Infinite Dive</b> has no daily limit. You start with ${O2_START}s of oxygen that drains constantly. Correct answers refill it (rarer answers refill more) and wrong guesses cost ${PENALTY}s. Dive until you run out.</p>
       <p>Only one answer per prompt is <b>One in a Krillion</b>: the very rarest on the sheet.</p>

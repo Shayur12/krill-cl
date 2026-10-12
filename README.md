@@ -55,5 +55,6 @@ Alternate spellings go after `|`, and the first form is the one shown. After edi
 
 - `js/match.js`: answer normalisation and fuzzy matching (shared with the validator)
 - `js/game.js`: game modes, timers, scoring, simulated rankings, results, stats, archive
-- `js/ocean.js`: ambient background whose colour sinks with your depth
+- `js/motion.js`: gameplay motion built on GSAP (loaded from cdnjs; the game falls back to CSS animations without it)
+- `js/ocean.js`: ambient background whose colour sinks with your depth and streaks past when you plunge
 - `tools/smoke.js`: end-to-end Playwright run of a daily dive and an infinite run, at desktop and phone sizes

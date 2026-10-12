@@ -587,18 +587,6 @@ window.KRILL_PROMPTS = (window.KRILL_PROMPTS || []).concat([
     "Stroma", "Cristae", "Grana|Granum", "Intermediate filaments", "Contractile vacuole", "Endosome", "Proteasome",
     "Glyoxysome", "Amyloplast", "Tonoplast", "Plasmodesmata", "Vault"
   ]},
-  { id: "sci-gemstone", prompt: "Name a gemstone", cat: "Science", answers: [
-    "Diamond", "Ruby", "Emerald", "Sapphire", "Amethyst", "Pearl", "Opal", "Topaz", "Jade", "Garnet", "Aquamarine",
-    "Turquoise", "Onyx", "Quartz", "Peridot", "Citrine", "Rose quartz", "Tanzanite", "Moonstone", "Amber", "Jasper",
-    "Agate", "Lapis lazuli", "Obsidian", "Tourmaline", "Tiger's eye", "Coral", "Malachite", "Zircon", "Alexandrite",
-    "Spinel", "Bloodstone", "Carnelian", "Morganite", "Jet", "Hematite", "Labradorite", "Beryl", "Moissanite",
-    "Pyrite", "Sunstone", "Kunzite", "Chrysoberyl", "Iolite", "Rhodochrosite", "Chalcedony", "Sodalite", "Fluorite",
-    "Smoky quartz", "Amazonite", "Aventurine", "Chrysoprase", "Larimar", "Apatite", "Kyanite", "Andalusite",
-    "Sphene|Titanite", "Jadeite", "Nephrite", "Ametrine", "Heliodor", "Demantoid", "Tsavorite", "Rhodolite",
-    "Spessartine", "Hiddenite", "Red beryl|Bixbite", "Benitoite", "Painite", "Taaffeite", "Grandidierite",
-    "Musgravite", "Serendibite", "Poudretteite", "Euclase", "Danburite", "Diopside", "Prehnite", "Charoite",
-    "Sugilite", "Ammolite", "Howlite"
-  ]},
   { id: "sci-muscle", prompt: "Name a muscle in the human body", cat: "Science", answers: [
     "Biceps", "Triceps", "Abs|Abdominals|Six-pack|Rectus abdominis", "Quadriceps|Quads", "Hamstrings",
     "Glutes|Gluteus maximus", "Heart|Cardiac muscle|Myocardium", "Pecs|Pectorals|Pectoralis major",
